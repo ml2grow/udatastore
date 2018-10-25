@@ -11,7 +11,7 @@ def cook_find_filter(doc_cls, filter):
 
 
 class DataStoreClientWrapper(object):
-    """ For compatibility with the collection property """
+    """ For compatibility with the collection property in umongo """
     def __init__(self, client):
         self.client = client
 
@@ -20,7 +20,11 @@ class DataStoreClientWrapper(object):
 
 
 class CollectionAbstraction(object):
-    """ Returned by the collection property, has some methods to interact with datastore on 1 specific entity kind. """
+    """
+    Represents a "collection", as a convention we interpret this as an Entity kind.
+
+    Instances are returned by the collection property, has some methods to interact with datastore on this specific entity.
+    """
     def __init__(self, client, cname):
         super(CollectionAbstraction, self).__init__()
         self.client = client

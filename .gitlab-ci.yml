@@ -1,0 +1,19 @@
+image: python:3.6
+
+
+stages:
+  - test
+
+
+unittest:
+  stage: test
+  services:
+  - singularities/datastore-emulator
+  variables:
+    DATASTORE_LISTEN_ADDRESS: '0.0.0.0:8081'
+    DATASTORE_PROJECT_ID: 'ml2grow-intern'
+    DATASTORE_EMULATOR_HOST: '127.0.0.1:8081'
+  before_script:
+    - pip install nox-automation
+  script:
+    - nox
