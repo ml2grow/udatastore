@@ -6,7 +6,8 @@ def cook_find_filter(doc_cls, filter):
     filter = tools.cook_find_filter(doc_cls, filter)
     pk = filter.pop('_id', None)
     if pk:
-        filter['__key__'] = doc_cls.collection.key(pk)
+        #assert isinstance(pk, datastore.Key)
+        filter['__key__'] = pk
     return filter
 
 

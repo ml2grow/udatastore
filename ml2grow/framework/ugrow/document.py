@@ -135,4 +135,5 @@ class DataStoreDocument(DocumentImplementation):
 
     @classmethod
     def get(cls, pk):
-        return cls.collection.get(pk)
+        ret = cls.collection.get(pk)
+        return cls.build_from_mongo(ret, use_cls=True)
