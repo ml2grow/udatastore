@@ -3,13 +3,13 @@ import inspect
 from .helpers import DataStoreClientWrapper
 from .document import DataStoreDocument
 from .reference import DataStoreReference
-from .fields import DatastoreReferenceField
+from .fields import ReferenceField
 
 from umongo import fields
 from umongo.frameworks.pymongo import _list_io_validate, _embedded_document_io_validate
 from umongo.builder import BaseBuilder, _collect_indexes, on_need_add_id_field, data_proxy_factory, add_child_field, Schema, _collect_schema_attrs, DocumentTemplate
 from umongo.builder import _build_document_opts as _build_document_opts_orig
-from umongo.fields import ReferenceField, ListField, EmbeddedField
+from umongo.fields import ListField, EmbeddedField
 from umongo.document import DocumentImplementation, DocumentOpts
 
 
@@ -24,7 +24,8 @@ _supported_field_types = [
     fields.EmailField,
     fields.EmbeddedField,
     fields.ListField,
-    fields.DictField
+    fields.DictField,
+    ReferenceField
 ]
 
 
@@ -58,7 +59,7 @@ class DataStoreBuilder(BaseBuilder):
             field.io_validate = validators
         if isinstance(field, ListField):
             field.io_validate_recursive = _list_io_validate
-        if isinstance(field, ReferenceField):
+        if isinstance(field, fields.ReferenceField):
             # due to eventual consistency, this check is to prone to failure.
             #field.io_validate.append(_reference_io_validate)
             field.reference_cls = DataStoreReference
@@ -90,8 +91,8 @@ class DataStoreBuilder(BaseBuilder):
 
     def build_document_from_template(self, template):
         """
-        Lots of copy paste, only to sneak in _convert_reference_field which converts ReferenceFields to
-        DatastoreReferenceFields
+        Lots of copy paste, only to sneak in _apply_to_schema which converts ReferenceFields to our
+        ReferenceFields, and checks valid fields are used.
         """
         assert issubclass(template, DocumentTemplate)
         name = template.__name__
@@ -99,7 +100,7 @@ class DataStoreBuilder(BaseBuilder):
         opts = _build_document_opts(self.instance, template, name, template.__dict__, bases)
         nmspc, schema_fields, schema_non_fields = _collect_schema_attrs(template.__dict__)
         schema_fields = self._apply_to_schema(schema_fields, lambda f: self._check_field(f))
-        schema_fields = self._apply_to_schema(schema_fields, lambda f: self._convert_field(f, ReferenceField, DatastoreReferenceField))
+        schema_fields = self._apply_to_schema(schema_fields, lambda f: self._convert_field(f, fields.ReferenceField, ReferenceField))
         nmspc['opts'] = opts
 
         # Create schema by retrieving inherited schema classes

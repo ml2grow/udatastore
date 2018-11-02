@@ -4,7 +4,7 @@ from umongo.data_objects import Reference
 import datetime
 
 
-class DatastoreReferenceField(umongo.fields.ReferenceField):
+class ReferenceField(umongo.fields.ReferenceField):
     """
     The default referencefield inherits the serialize/deserialize behavour from marshmallow_bonus which creates
     bson.ObjectIDs
