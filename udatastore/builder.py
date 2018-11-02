@@ -5,7 +5,7 @@ from .document import DataStoreDocument
 from .reference import DataStoreReference
 from .fields import DatastoreReferenceField
 
-from umongo.frameworks.pymongo import _list_io_validate, _reference_io_validate, _embedded_document_io_validate
+from umongo.frameworks.pymongo import _list_io_validate, _embedded_document_io_validate
 from umongo.builder import BaseBuilder, _collect_indexes, on_need_add_id_field, data_proxy_factory, add_child_field, Schema, _collect_schema_attrs, DocumentTemplate
 from umongo.builder import _build_document_opts as _build_document_opts_orig
 from umongo.fields import ReferenceField, ListField, EmbeddedField
@@ -43,7 +43,8 @@ class DataStoreBuilder(BaseBuilder):
         if isinstance(field, ListField):
             field.io_validate_recursive = _list_io_validate
         if isinstance(field, ReferenceField):
-            field.io_validate.append(_reference_io_validate)
+            # due to eventual consistency, this check is to prone to failure.
+            #field.io_validate.append(_reference_io_validate)
             field.reference_cls = DataStoreReference
         if isinstance(field, EmbeddedField):
             field.io_validate_recursive = _embedded_document_io_validate

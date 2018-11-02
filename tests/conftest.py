@@ -1,15 +1,19 @@
 from google.cloud import datastore
 import pytest
-from ml2grow.framework.ugrow import DataStoreInstance
+from udatastore import DataStoreInstance
 
 
 @pytest.fixture
-def instance():
+def client():
     cl = datastore.Client(project='ml2grow-intern', namespace='abcd')
-    for kind in ["UserTempl", "ModelTempl"]:
+    for kind in ["UserTempl", "ModelTempl", "User"]:
         for e in cl.query(kind=kind).fetch():
-            print(e)
             cl.delete(e.key)
+    yield cl
+
+
+@pytest.fixture
+def instance(client):
     inst = DataStoreInstance()
-    inst.init(cl)
+    inst.init(client)
     yield inst

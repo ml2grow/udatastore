@@ -1,12 +1,19 @@
 from umongo import Document, fields, validate
+from udatastore.helpers import DataStoreClientWrapper
+from udatastore.builder import DataStoreBuilder
 from datetime import datetime
-import time
 
 
 class UserTempl(Document):
     email = fields.EmailField(required=True, unique=True)
     birthday = fields.DateTimeField(validate=validate.Range(min=datetime(1900, 1, 1)))
     friend = fields.ListField(fields.ReferenceField("UserTempl"))
+
+
+def test_instance(instance, client):
+    assert isinstance(instance.db, DataStoreClientWrapper)
+    assert instance.db.client == client
+    assert instance.BUILDER_CLS == DataStoreBuilder
 
 
 def test_create_commit_find(instance):
