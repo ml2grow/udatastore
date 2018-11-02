@@ -15,6 +15,6 @@ unittest:
     DATASTORE_PROJECT_ID: 'ml2grow-intern'
     DATASTORE_EMULATOR_HOST: '127.0.0.1:8081'
   before_script:
-    - pip install nox-automation
+    - pip install nox
   script:
     - nox

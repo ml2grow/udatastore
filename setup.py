@@ -28,7 +28,7 @@ setup(
     description='Datastore framework implementation for umongo',
     packages=find_packages(exclude=('tests*',)),
     extras_require={
-        'test': ['nox-automation']
+        'test': ['nox']
     },
     include_package_data=True,
     install_requires=REQUIREMENTS,

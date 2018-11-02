@@ -1,9 +1,8 @@
 import nox
 
 
-@nox.session
+@nox.session(python="3.6")
 def unit(session):
-    session.interpreter = 'python3.6'
     session.install('pytest', 'mock', 'pytest-spec')
     session.install('-e', '.')
 
