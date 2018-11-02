@@ -6,7 +6,7 @@ from udatastore import DataStoreInstance
 @pytest.fixture
 def client():
     cl = datastore.Client(project='ml2grow-intern', namespace='abcd')
-    for kind in ["UserTempl", "ModelTempl", "User"]:
+    for kind in ["UserTempl", "ModelTempl", "User", "IncorrectTempl"]:
         for e in cl.query(kind=kind).fetch():
             cl.delete(e.key)
     yield cl

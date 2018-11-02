@@ -2,6 +2,7 @@ from google.cloud import datastore
 from umongo.frameworks import tools
 import copy
 import itertools
+from datetime import datetime
 
 
 def cook_find_filter(doc_cls, filter):
@@ -61,10 +62,19 @@ class CollectionAbstraction(object):
 
     @staticmethod
     def _unpack(entity):
-        return {
+        if entity is None:
+            return None
+
+        payload = {
             '_id': entity.key.id_or_name,
-            **entity
-        } if entity is not None else None
+        }
+
+        for k, v in entity.items():
+            if isinstance(v, datetime):
+                v = v.replace(tzinfo=None)
+            payload[k] = v
+
+        return payload
 
     def _pack(self, payload):
         pk = payload.pop('_id', None)
@@ -79,8 +89,7 @@ class CollectionAbstraction(object):
             return self.client.key(self.cname)
 
     def get(self, pk):
-        entity = self.client.get(self.key(pk))
-        return self._unpack(entity)
+        return self.get_multi([pk])[0]
 
     def get_multi(self, pks):
         keys = list(map(self.key, pks))

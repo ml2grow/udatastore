@@ -2,12 +2,17 @@ from umongo import Document, fields, validate
 from udatastore.helpers import DataStoreClientWrapper
 from udatastore.builder import DataStoreBuilder
 from datetime import datetime
+import pytest
 
 
 class UserTempl(Document):
     email = fields.EmailField(required=True, unique=True)
     birthday = fields.DateTimeField(validate=validate.Range(min=datetime(1900, 1, 1)))
     friend = fields.ListField(fields.ReferenceField("UserTempl"))
+
+
+class IncorrectTempl(Document):
+    birthday = fields.UUIDField(required=True)
 
 
 def test_instance(instance, client):
@@ -27,7 +32,7 @@ def test_create_commit_find(instance):
     assert found[0].email == goku.email
 
     found = User.find_one({'birthday': goku.birthday})
-    assert found.birthday.replace(tzinfo=None) == goku.birthday
+    assert found.birthday == goku.birthday
     assert found.email == goku.email
 
     data = list(instance.db.client.query(kind='UserTempl').fetch())
@@ -46,3 +51,10 @@ def test_fetch_reference(instance):
     assert found == vegeta
     retrieved = found.friend[0].fetch()
     assert retrieved == goku
+
+
+def test_unsupposered_fields(instance):
+    with pytest.raises(Exception):
+        instance.register(IncorrectTempl)
+
+

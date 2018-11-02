@@ -16,9 +16,6 @@ class DataStoreDocument(DocumentImplementation):
     def reload(self):
         """
         Retrieve and replace document's data by the ones in database.
-
-        Raises :class:`umongo.exceptions.NotCreatedError` if the document
-        doesn't exist in database.
         """
         if not self.is_created:
             raise NotCreatedError("Document doesn't exists in database")
@@ -33,47 +30,37 @@ class DataStoreDocument(DocumentImplementation):
         Commit the document in database.
         If the document doesn't already exist it will be inserted, otherwise
         it will be updated.
-
-        :param io_validate_all:
-        :param conditions: only perform commit if matching record in db
-            satisfies condition(s) (e.g. version number).
-            Raises :class:`umongo.exceptions.UpdateError` if the
-            conditions are not satisfied.
-         :return: A :class:`pymongo.results.UpdateResult` or
-            :class:`pymongo.results.InsertOneResult` depending of the operation.
        """
-        try:
-            was_created = self.is_created
-            if self.is_modified():
-                self.required_validate()
-                self.io_validate(validate_all=io_validate_all)
-                payload = self._data.to_mongo(update=False)
-                key = self.collection.put(payload)
+        return self.commit_multi([self], io_validate_all=io_validate_all)
 
-            if not was_created:
-                self._data.set_by_mongo_name('_id', key)
+    @classmethod
+    def commit_multi(cls, docs, io_validate_all=False):
+        payloads = []
+        try:
+            for doc in docs:
+                if doc.is_modified():
+                    doc.required_validate()
+                    doc.io_validate(validate_all=io_validate_all)
+                    payloads.append(doc._data.to_mongo(update=False))
+
+            keys = cls.collection.put_multi(payloads)
+
+            for key, doc in zip(keys, docs):
+                if not doc.is_created:
+                    doc._data.set_by_mongo_name('_id', key)
 
         except Exception as exc:
             # Need to dig into error message to find faulting index
             raise ValidationError(str(exc))
-        self.is_created = True
-        self._data.clear_modified()
+
+        for doc in docs:
+            doc.is_created = True
+            doc._data.clear_modified()
         return None
 
     def delete(self):
         """
         Remove the document from database.
-
-        :param conditions: Only perform delete if matching record in db
-            satisfies condition(s) (e.g. version number).
-            Raises :class:`umongo.exceptions.DeleteError` if the
-            conditions are not satisfied.
-        Raises :class:`umongo.exceptions.NotCreatedError` if the document
-        is not created (i.e. ``doc.is_created`` is False)
-        Raises :class:`umongo.exceptions.DeleteError` if the document
-        doesn't exist in database.
-
-        :return: A :class:`pymongo.results.DeleteResult`
         """
         if not self.is_created:
             raise NotCreatedError("Document doesn't exists in database")
@@ -86,9 +73,6 @@ class DataStoreDocument(DocumentImplementation):
     def io_validate(self, validate_all=False):
         """
         Run the io_validators of the document's fields.
-
-        :param validate_all: If False only run the io_validators of the
-            fields that have been modified.
         """
         if validate_all:
             return _io_validate_data_proxy(self.schema, self._data)
@@ -110,7 +94,6 @@ class DataStoreDocument(DocumentImplementation):
 
         Returns a cursor that provide Documents.
         """
-        # In txmongo, `spec` is for filtering and `filter` is for sorting
         spec = cook_find_filter(cls, spec)
 
         for ret in cls.collection.query(spec, *args, **kwargs):
@@ -121,19 +104,22 @@ class DataStoreDocument(DocumentImplementation):
         """
         Get the number of documents in this collection.
         """
-        # In txmongo, `spec` is for filtering and `filter` is for sorting
         spec = cook_find_filter(cls, spec)
         return len(list(cls.find(spec)))
 
     @classmethod
     def ensure_indexes(cls):
         """
-        Check&create if needed the Document's indexes in database
+        No index support for datastore
         """
         return
         yield
 
     @classmethod
     def get(cls, pk):
-        ret = cls.collection.get(pk)
-        return cls.build_from_mongo(ret, use_cls=True)
+        return cls.get_multi([pk])[0]
+
+    @classmethod
+    def get_multi(cls, pks):
+        returned = cls.collection.get_multi(pks)
+        return list(map(lambda r: cls.build_from_mongo(r, use_cls=True), returned))

@@ -5,11 +5,27 @@ from .document import DataStoreDocument
 from .reference import DataStoreReference
 from .fields import DatastoreReferenceField
 
+from umongo import fields
 from umongo.frameworks.pymongo import _list_io_validate, _embedded_document_io_validate
 from umongo.builder import BaseBuilder, _collect_indexes, on_need_add_id_field, data_proxy_factory, add_child_field, Schema, _collect_schema_attrs, DocumentTemplate
 from umongo.builder import _build_document_opts as _build_document_opts_orig
 from umongo.fields import ReferenceField, ListField, EmbeddedField
 from umongo.document import DocumentImplementation, DocumentOpts
+
+
+_supported_field_types = [
+    fields.BooleanField,
+    fields.DateTimeField,
+    fields.ReferenceField,
+    fields.StringField,
+    fields.NumberField,
+    fields.IntegerField,
+    fields.UrlField,
+    fields.EmailField,
+    fields.EmbeddedField,
+    fields.ListField,
+    fields.DictField
+]
 
 
 def _build_document_opts(instance, template, name, nmspc, bases):
@@ -50,18 +66,26 @@ class DataStoreBuilder(BaseBuilder):
             field.io_validate_recursive = _embedded_document_io_validate
 
     @classmethod
-    def _convert_reference_field(cls, field):
-        if isinstance(field, ReferenceField):
-            field = DatastoreReferenceField(**field.__dict__)
+    def _convert_field(cls, field, find_cls, replace_cls):
+        if isinstance(field, find_cls):
+            field = replace_cls(**field.__dict__)
         if isinstance(field, ListField):
-            field.container = cls._convert_reference_field(field.container)
+            field.container = cls._convert_field(field.container, find_cls, replace_cls)
         return field
 
     @classmethod
-    def _convert_schema(cls, schema_fields):
+    def _check_field(cls, field):
+        if field.__class__ not in _supported_field_types:
+            raise Exception("Field type {0} is currently unsupported for datastore".format(field.__class__.__name__))
+        if isinstance(field, ListField):
+            field.container = cls._check_field(field.container)
+        return field
+
+    @classmethod
+    def _apply_to_schema(cls, schema_fields, callable):
         fields = {}
         for name, field in schema_fields.items():
-            fields[name] = cls._convert_reference_field(field)
+            fields[name] = callable(field)
         return fields
 
     def build_document_from_template(self, template):
@@ -74,7 +98,8 @@ class DataStoreBuilder(BaseBuilder):
         bases = self._convert_bases(template.__bases__)
         opts = _build_document_opts(self.instance, template, name, template.__dict__, bases)
         nmspc, schema_fields, schema_non_fields = _collect_schema_attrs(template.__dict__)
-        schema_fields = self._convert_schema(schema_fields)
+        schema_fields = self._apply_to_schema(schema_fields, lambda f: self._check_field(f))
+        schema_fields = self._apply_to_schema(schema_fields, lambda f: self._convert_field(f, ReferenceField, DatastoreReferenceField))
         nmspc['opts'] = opts
 
         # Create schema by retrieving inherited schema classes

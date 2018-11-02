@@ -27,7 +27,7 @@ def data(collection):
     collection.put({'identifier': 11, 'property': 0.0, 'category': 'A'})
 
 
-def test_key(collection):
+def test_create_key(collection):
     key = collection.key(5)
     assert isinstance(key, datastore.Key)
     assert key.kind == 'User'

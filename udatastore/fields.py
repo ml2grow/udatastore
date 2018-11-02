@@ -1,9 +1,10 @@
-from umongo.fields import ReferenceField
+import umongo
 from umongo.exceptions import ValidationError
 from umongo.data_objects import Reference
+import datetime
 
 
-class DatastoreReferenceField(ReferenceField):
+class DatastoreReferenceField(umongo.fields.ReferenceField):
     """
     The default referencefield inherits the serialize/deserialize behavour from marshmallow_bonus which creates
     bson.ObjectIDs
@@ -36,3 +37,5 @@ class DatastoreReferenceField(ReferenceField):
         # `value` is similar to data received from the database so we
         # can use `_deserialize_from_mongo` to finish the deserialization
         return self._deserialize_from_mongo(value)
+
+
