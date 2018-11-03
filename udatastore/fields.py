@@ -27,7 +27,7 @@ class ReferenceField(umongo.fields.ReferenceField):
     def _serialize(self, value, attr, obj):
         if value is None:
             return None
-        return value.id_or_name
+        return value.pk
 
     def _deserialize(self, value, attr, data):
         if value is None:

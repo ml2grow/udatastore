@@ -13,6 +13,9 @@
 # limitations under the License.
 
 import umongo
+
 from .instance import DataStoreInstance, DataStoreBuilder
+from .helpers import DataStoreClientWrapper
 
 umongo.frameworks.register_builder(DataStoreBuilder)
+
