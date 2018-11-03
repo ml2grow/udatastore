@@ -110,8 +110,8 @@ class CollectionAbstraction:
         return self.get_multi([key])[0]
 
     def get_multi(self, keys):
-        keys = list(map(self.key, keys))
-        entities = self.client.get_multi(keys)
+        keys_wrapped = list(map(self.key, keys))
+        entities = self.client.get_multi(keys_wrapped)
         entity_map = {e.key.id_or_name: e for e in entities}
         return [self._unpack(entity_map.get(key, None)) for key in keys]
 
