@@ -1,49 +1,53 @@
-from google.cloud import datastore
-from umongo.frameworks import tools
 import copy
 import itertools
 from datetime import datetime
 
-
-def cook_find_filter(doc_cls, filter):
-    filter = tools.cook_find_filter(doc_cls, filter)
-    pk = filter.pop('_id', None)
-    if pk:
-        filter['__key__'] = pk
-    return filter
+from google.cloud import datastore
+from umongo.frameworks import tools
 
 
-def _apply_filter(q, *args, fresh=False):
+def cook_find_filter(doc_cls, filters):
+    filters = tools.cook_find_filter(doc_cls, filters)
+    key = filters.pop('_id', None)
+    if key:
+        filters['__key__'] = key
+    return filters
+
+
+def _apply_filter(query, *args, fresh=False):
+    # pylint: disable=W0212
     if fresh:
-        q = datastore.Query(
-            client=q._client,
-            kind=q._kind,
-            project=q._project,
-            namespace=q._namespace,
-            ancestor=q._ancestor,
-            filters=copy.deepcopy(q._filters),
-            projection=q._projection,
-            order=q._order,
-            distinct_on=q._distinct_on
+        query = datastore.Query(
+            client=query._client,
+            kind=query._kind,
+            project=query._project,
+            namespace=query._namespace,
+            ancestor=query._ancestor,
+            filters=copy.deepcopy(query._filters),
+            projection=query._projection,
+            order=query._order,
+            distinct_on=query._distinct_on
         )
-    q.add_filter(*args)
-    return q
+    query.add_filter(*args)
+    return query
 
 
-class DataStoreClientWrapper(object):
+class DataStoreClientWrapper:
     """ For compatibility with the collection property in umongo """
     def __init__(self, client):
+        super().__init__()
         self.client = client
 
-    def __getitem__(self, cname):
+    def __getitem__(self, cname) -> 'CollectionAbstraction':
         return CollectionAbstraction(self.client, cname)
 
 
-class CollectionAbstraction(object):
+class CollectionAbstraction:
     """
     Represents a "collection", as a convention we interpret this as an Entity kind.
 
-    Instances are returned by the collection property, has some methods to interact with datastore on this specific entity.
+    Instances are returned by the collection property, has some methods to interact
+    with datastore on this specific entity.
     """
 
     _filter_oper_lookup = {
@@ -69,33 +73,33 @@ class CollectionAbstraction(object):
             '_id': entity.key.id_or_name,
         }
 
-        for k, v in entity.items():
-            if isinstance(v, datetime):
-                v = v.replace(tzinfo=None)
-            payload[k] = v
+        for key, value in entity.items():
+            if isinstance(value, datetime):
+                value = value.replace(tzinfo=None)
+            payload[key] = value
 
         return payload
 
     def _pack(self, payload):
-        pk = payload.pop('_id', None)
-        entity = datastore.Entity(key=self.key(pk))
+        ref = payload.pop('_id', None)
+        entity = datastore.Entity(key=self.key(ref))
         entity.update(payload)
         return entity
 
-    def key(self, pk=None):
-        if pk:
-            return self.client.key(self.cname, pk)
+    def key(self, ref=None):
+        if ref:
+            return self.client.key(self.cname, ref)
         else:
             return self.client.key(self.cname)
 
-    def get(self, pk):
-        return self.get_multi([pk])[0]
+    def get(self, key):
+        return self.get_multi([key])[0]
 
-    def get_multi(self, pks):
-        keys = list(map(self.key, pks))
+    def get_multi(self, keys):
+        keys = list(map(self.key, keys))
         entities = self.client.get_multi(keys)
         entity_map = {e.key.id_or_name: e for e in entities}
-        return [self._unpack(entity_map.get(k, None)) for k in pks]
+        return [self._unpack(entity_map.get(key, None)) for key in keys]
 
     def put(self, payload):
         keys = self.put_multi([payload])
@@ -106,19 +110,20 @@ class CollectionAbstraction(object):
         self.client.put_multi(entities)
         return list(map(lambda k: k.key.id_or_name, entities))
 
-    def delete(self, pk):
-        self.client.delete(self.key(pk))
+    def delete(self, key):
+        self.client.delete(self.key(key))
 
     def query(self, filters, *args, **kwargs):
-        qs = [self.client.query(kind=self.cname)]
-        for k, v in filters.items():
-            if isinstance(v, dict):
-                for o1, o2 in v.items():
-                    qs = itertools.chain(*[self._filter_oper_lookup[o1](q, k, o2) for q in qs])
+        queries = [self.client.query(kind=self.cname)]
+        for attr, domain in filters.items():
+            if isinstance(domain, dict):
+                for oper, operand in domain.items():
+                    query_groups = [self._filter_oper_lookup[oper](query, attr, operand) for query in queries]
+                    queries = itertools.chain(*query_groups)
             else:
-                for q in qs:
-                    q.add_filter(k, '=', v)
+                for query in queries:
+                    query.add_filter(attr, '=', domain)
 
-        for q in qs:
-            for ret in q.fetch(*args, **kwargs):
+        for query in queries:
+            for ret in query.fetch(*args, **kwargs):
                 yield self._unpack(ret)

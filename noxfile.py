@@ -1,3 +1,4 @@
+# pylint: skip-file
 import nox
 
 
@@ -9,3 +10,11 @@ def unit(session):
     # Run py.test against the unit tests.
     session.run('py.test', '--spec', 'tests')
 
+
+@nox.session(python="3.6")
+def lint(session):
+    session.install('pylint')
+    session.install('pylint_runner')
+    session.install('-e', '.')
+
+    session.run('pylint_runner', 'udatastore')

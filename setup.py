@@ -2,14 +2,14 @@ import re
 from setuptools import setup, find_packages
 
 
-VERSIONFILE="udatastore/_version.py"
-verstrline = open(VERSIONFILE, "rt").read()
-VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
-mo = re.search(VSRE, verstrline, re.M)
-if mo:
-    verstr = mo.group(1)
-else:
-    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
+def read_version(fname):
+    verstrline = open(fname, "rt").read()
+    vsre = r"^__version__ = ['\"]([^'\"]*)['\"]"
+    matched = re.search(vsre, verstrline, re.M)
+    if matched:
+        return matched.group(1)
+    else:
+        raise RuntimeError("Unable to find version string in %s." % (fname,))
 
 
 REQUIREMENTS = [
@@ -20,7 +20,7 @@ REQUIREMENTS = [
 
 setup(
     name='udatastore',
-    version=verstr,
+    version=read_version("udatastore/_version.py"),
     url='https://github.com/ml2grow/udatastore',
     license="Apache License 2.0",
     author='javdrher',

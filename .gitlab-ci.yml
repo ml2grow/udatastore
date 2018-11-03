@@ -17,4 +17,12 @@ unittest:
   before_script:
     - pip install nox
   script:
-    - nox
+    - nox -s unit
+
+
+lint:
+  stage: test
+  before_script:
+    - pip install nox
+  script:
+    - nox -s lint

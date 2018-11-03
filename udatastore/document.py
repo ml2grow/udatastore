@@ -1,8 +1,8 @@
-from .helpers import cook_find_filter
-
 from umongo.document import DocumentImplementation
 from umongo.exceptions import NotCreatedError, ValidationError, DeleteError
 from umongo.frameworks.pymongo import _io_validate_data_proxy
+
+from .helpers import cook_find_filter
 
 
 class DataStoreDocument(DocumentImplementation):
@@ -35,6 +35,7 @@ class DataStoreDocument(DocumentImplementation):
 
     @classmethod
     def commit_multi(cls, docs, io_validate_all=False):
+        # pylint: disable=W0212
         payloads = []
         try:
             for doc in docs:
@@ -43,7 +44,7 @@ class DataStoreDocument(DocumentImplementation):
                     doc.io_validate(validate_all=io_validate_all)
                     payloads.append(doc._data.to_mongo(update=False))
 
-            keys = cls.collection.put_multi(payloads)
+            keys = cls.collection.put_multi(payloads)  # pylint: disable=E1101
 
             for key, doc in zip(keys, docs):
                 if not doc.is_created:
@@ -56,7 +57,6 @@ class DataStoreDocument(DocumentImplementation):
         for doc in docs:
             doc.is_created = True
             doc._data.clear_modified()
-        return None
 
     def delete(self):
         """
@@ -65,10 +65,10 @@ class DataStoreDocument(DocumentImplementation):
         if not self.is_created:
             raise NotCreatedError("Document doesn't exists in database")
         try:
-            self.collection.delete(self.pk)
+            self.collection.delete(self.pk)  # pylint: disable=E1101
             self.is_created = False
-        except Exception as e:
-            raise DeleteError(str(e))
+        except Exception as exc:
+            raise DeleteError(str(exc))
 
     def io_validate(self, validate_all=False):
         """
@@ -81,31 +81,31 @@ class DataStoreDocument(DocumentImplementation):
                 self.schema, self._data, partial=self._data.get_modified_fields())
 
     @classmethod
-    def find_one(cls, spec=None, *args, **kwargs):
+    def find_one(cls, filters=None, **kwargs):
         """
         Find a single document in database.
         """
-        return next(cls.find(spec, limit=1, *args, **kwargs))
+        return next(cls.find(filters, limit=1, **kwargs))
 
     @classmethod
-    def find(cls, spec=None, *args, **kwargs):
+    def find(cls, filters=None, **kwargs):
         """
         Find a list document in database.
 
         Returns a cursor that provide Documents.
         """
-        spec = cook_find_filter(cls, spec)
+        filters = cook_find_filter(cls, filters or {})
 
-        for ret in cls.collection.query(spec, *args, **kwargs):
+        for ret in cls.collection.query(filters, **kwargs):  # pylint: disable=E1101
             yield cls.build_from_mongo(ret, use_cls=True)
 
     @classmethod
-    def count(cls, spec=None, **kwargs):
+    def count(cls, filters=None):
         """
         Get the number of documents in this collection.
         """
-        spec = cook_find_filter(cls, spec)
-        return len(list(cls.find(spec)))
+        filters = cook_find_filter(cls, filters)
+        return len(list(cls.find(filters)))
 
     @classmethod
     def ensure_indexes(cls):
@@ -113,13 +113,13 @@ class DataStoreDocument(DocumentImplementation):
         No index support for datastore
         """
         return
-        yield
+        yield  # pylint: disable=W0101
 
     @classmethod
-    def get(cls, pk):
-        return cls.get_multi([pk])[0]
+    def get(cls, key):
+        return cls.get_multi([key])[0]
 
     @classmethod
     def get_multi(cls, pks):
-        returned = cls.collection.get_multi(pks)
+        returned = cls.collection.get_multi(pks)  # pylint: disable=E1101
         return list(map(lambda r: cls.build_from_mongo(r, use_cls=True), returned))

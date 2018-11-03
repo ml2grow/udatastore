@@ -1,19 +1,28 @@
 import inspect
 
+from umongo import fields
+from umongo.frameworks.pymongo import _list_io_validate, _embedded_document_io_validate
+from umongo.builder import _build_document_opts as _build_document_opts_orig
+from umongo.fields import ListField, EmbeddedField
+from umongo.document import DocumentImplementation, DocumentOpts
+from umongo.builder import (
+    BaseBuilder,
+    _collect_indexes,
+    on_need_add_id_field,
+    data_proxy_factory,
+    add_child_field,
+    Schema,
+    _collect_schema_attrs,
+    DocumentTemplate
+)
+
 from .helpers import DataStoreClientWrapper
 from .document import DataStoreDocument
 from .reference import DataStoreReference
 from .fields import ReferenceField
 
-from umongo import fields
-from umongo.frameworks.pymongo import _list_io_validate, _embedded_document_io_validate
-from umongo.builder import BaseBuilder, _collect_indexes, on_need_add_id_field, data_proxy_factory, add_child_field, Schema, _collect_schema_attrs, DocumentTemplate
-from umongo.builder import _build_document_opts as _build_document_opts_orig
-from umongo.fields import ListField, EmbeddedField
-from umongo.document import DocumentImplementation, DocumentOpts
 
-
-_supported_field_types = [
+SUPPORTED_FIELD_TYPES = [
     fields.BooleanField,
     fields.DateTimeField,
     fields.ReferenceField,
@@ -25,6 +34,8 @@ _supported_field_types = [
     fields.EmbeddedField,
     fields.ListField,
     fields.DictField,
+    fields.FormattedStringField,
+    fields.FloatField,
     ReferenceField
 ]
 
@@ -42,8 +53,8 @@ class DataStoreBuilder(BaseBuilder):
     BASE_DOCUMENT_CLS = DataStoreDocument
 
     @staticmethod
-    def is_compatible_with(db):
-        return isinstance(db, DataStoreClientWrapper)
+    def is_compatible_with(database):
+        return isinstance(database, DataStoreClientWrapper)
 
     def _patch_field(self, field):
         super()._patch_field(field)
@@ -67,27 +78,28 @@ class DataStoreBuilder(BaseBuilder):
             field.io_validate_recursive = _embedded_document_io_validate
 
     @classmethod
-    def _convert_field(cls, field, find_cls, replace_cls):
-        if isinstance(field, find_cls):
-            field = replace_cls(**field.__dict__)
+    def _convert_reference_field(cls, field):
+        # Swap referencefield with our implementation for datastore keys
+        if isinstance(field, fields.ReferenceField):
+            field = ReferenceField(**field.__dict__)
         if isinstance(field, ListField):
-            field.container = cls._convert_field(field.container, find_cls, replace_cls)
+            field.container = cls._convert_reference_field(field.container)
         return field
 
     @classmethod
     def _check_field(cls, field):
-        if field.__class__ not in _supported_field_types:
+        if field.__class__ not in SUPPORTED_FIELD_TYPES:
             raise Exception("Field type {0} is currently unsupported for datastore".format(field.__class__.__name__))
         if isinstance(field, ListField):
             field.container = cls._check_field(field.container)
         return field
 
     @classmethod
-    def _apply_to_schema(cls, schema_fields, callable):
-        fields = {}
+    def _apply_to_schema(cls, schema_fields, func):
+        transformed_fields = {}
         for name, field in schema_fields.items():
-            fields[name] = callable(field)
-        return fields
+            transformed_fields[name] = func(field)
+        return transformed_fields
 
     def build_document_from_template(self, template):
         """
@@ -99,8 +111,8 @@ class DataStoreBuilder(BaseBuilder):
         bases = self._convert_bases(template.__bases__)
         opts = _build_document_opts(self.instance, template, name, template.__dict__, bases)
         nmspc, schema_fields, schema_non_fields = _collect_schema_attrs(template.__dict__)
-        schema_fields = self._apply_to_schema(schema_fields, lambda f: self._check_field(f))
-        schema_fields = self._apply_to_schema(schema_fields, lambda f: self._convert_field(f, fields.ReferenceField, ReferenceField))
+        schema_fields = self._apply_to_schema(schema_fields, self._check_field)
+        schema_fields = self._apply_to_schema(schema_fields, self._convert_reference_field)
         nmspc['opts'] = opts
 
         # Create schema by retrieving inherited schema classes
