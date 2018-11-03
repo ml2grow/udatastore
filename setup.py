@@ -32,6 +32,9 @@ REQUIREMENTS = [
     'google-cloud-datastore>=1.7.0'
 ]
 
+with open('README.md') as f:
+    README = f.read()
+
 setup(
     name='udatastore',
     version=read_version("udatastore/_version.py"),
@@ -40,10 +43,22 @@ setup(
     author='javdrher',
     author_email='joachim@ml2grow.com',
     description='Datastore framework implementation for umongo',
+    long_description=README,
+    long_description_content_type='text/markdown',
     packages=find_packages(exclude=('tests*',)),
     extras_require={
         'test': ['nox']
     },
     include_package_data=True,
     install_requires=REQUIREMENTS,
+    test_suite='tests',
+    keywords='udatastore umongo pymongo datastore',
+    classifiers=[
+        'Development Status :: 3 - Alpha'
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+    ]
 )

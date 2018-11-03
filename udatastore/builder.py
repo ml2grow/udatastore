@@ -21,13 +21,13 @@ from umongo.fields import ListField, EmbeddedField
 from umongo.document import DocumentImplementation, DocumentOpts
 from umongo.builder import (
     BaseBuilder,
+    Schema,
+    DocumentTemplate,
     _collect_indexes,
+    _collect_schema_attrs,
     on_need_add_id_field,
     data_proxy_factory,
-    add_child_field,
-    Schema,
-    _collect_schema_attrs,
-    DocumentTemplate
+    add_child_field
 )
 
 from .helpers import DataStoreClientWrapper
@@ -39,7 +39,7 @@ from .fields import ReferenceField, SUPPORTED_FIELD_TYPES
 def _build_document_opts(instance, template, name, nmspc, bases):
     opts = _build_document_opts_orig(instance, template, name, nmspc, bases)
     components = opts.__dict__
-    # Override camel_to_snake
+    # Override camel_to_snake function
     components['collection_name'] = name
     return DocumentOpts(**components)
 
@@ -107,7 +107,11 @@ class DataStoreBuilder(BaseBuilder):
         bases = self._convert_bases(template.__bases__)
         opts = _build_document_opts(self.instance, template, name, template.__dict__, bases)
         nmspc, schema_fields, schema_non_fields = _collect_schema_attrs(template.__dict__)
+
+        # Things we add here:
+        # Check if only supported fields are used
         schema_fields = self._apply_to_schema(schema_fields, self._check_field)
+        # Convert umongo.fields.ReferenceField to our implementation
         schema_fields = self._apply_to_schema(schema_fields, self._convert_reference_field)
         nmspc['opts'] = opts
 

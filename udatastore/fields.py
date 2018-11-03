@@ -19,11 +19,10 @@ from umongo.data_objects import Reference
 
 class ReferenceField(umongo.fields.ReferenceField):
     """
-    The default referencefield inherits the serialize/deserialize behavour from marshmallow_bonus which creates
-    bson.ObjectIDs
+    umongo.fields.ReferenceField inherits the serialize/deserialize behaviour which creates bson.ObjectIDs
 
-    In order to avoid this, we must override the _(de)serialize of the referencefield class.
-    This involves some copy paste. The DataStoreBuilder then overrides all ReferenceFields with this version.
+    In order to avoid this, we must override the _(de)serialize of the ReferenceField class.
+    This involves some copy paste.
     """
     def _serialize(self, value, attr, obj):
         if value is None:
