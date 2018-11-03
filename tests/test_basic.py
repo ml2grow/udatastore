@@ -40,6 +40,11 @@ def test_create_commit_find(instance):
     data[0].key.id_or_name == found.pk
 
 
+def test_find_one_not_exist(instance):
+    User = instance.register(UserTempl)
+    assert User.find_one() is None
+
+
 def test_fetch_reference(instance):
     User = instance.register(UserTempl)
     goku = User(email='goku@sayen.com', birthday=datetime(1984, 11, 20))

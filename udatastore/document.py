@@ -99,7 +99,11 @@ class DataStoreDocument(DocumentImplementation):
         """
         Find a single document in database.
         """
-        return next(cls.find(filters, limit=1, order=order))
+        try:
+            doc = next(cls.find(filters, limit=1, order=order))
+        except StopIteration:
+            doc = None
+        return doc
 
     @classmethod
     def find(cls, filters=None, order=(), limit=None):
@@ -118,7 +122,7 @@ class DataStoreDocument(DocumentImplementation):
         """
         Get the number of documents in this collection.
         """
-        filters = cook_find_filter(cls, filters)
+        filters = cook_find_filter(cls, filters or {})
         return len(list(cls.find(filters)))
 
     @classmethod
