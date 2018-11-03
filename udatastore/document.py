@@ -95,14 +95,14 @@ class DataStoreDocument(DocumentImplementation):
                 self.schema, self._data, partial=self._data.get_modified_fields())
 
     @classmethod
-    def find_one(cls, filters=None, **kwargs):
+    def find_one(cls, filters=None, order=()):
         """
         Find a single document in database.
         """
-        return next(cls.find(filters, limit=1, **kwargs))
+        return next(cls.find(filters, limit=1, order=order))
 
     @classmethod
-    def find(cls, filters=None, **kwargs):
+    def find(cls, filters=None, order=(), limit=None):
         """
         Find a list document in database.
 
@@ -110,7 +110,7 @@ class DataStoreDocument(DocumentImplementation):
         """
         filters = cook_find_filter(cls, filters or {})
 
-        for ret in cls.collection.query(filters, **kwargs):  # pylint: disable=E1101
+        for ret in cls.collection.query(filters, order=order, limit=limit):  # pylint: disable=E1101
             yield cls.build_from_mongo(ret, use_cls=True)
 
     @classmethod

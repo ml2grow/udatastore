@@ -50,3 +50,22 @@ class ReferenceField(umongo.fields.ReferenceField):
         # `value` is similar to data received from the database so we
         # can use `_deserialize_from_mongo` to finish the deserialization
         return self._deserialize_from_mongo(value)
+
+
+SUPPORTED_FIELD_TYPES = [
+    umongo.fields.BooleanField,
+    umongo.fields.DateTimeField,
+    umongo.fields.ReferenceField,
+    umongo.fields.StringField,
+    umongo.fields.NumberField,
+    umongo.fields.IntegerField,
+    umongo.fields.UrlField,
+    umongo.fields.EmailField,
+    umongo.fields.EmbeddedField,
+    umongo.fields.ListField,
+    umongo.fields.DictField,
+    umongo.fields.FormattedStringField,
+    umongo.fields.FloatField,
+    ReferenceField
+]
+

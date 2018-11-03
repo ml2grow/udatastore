@@ -33,25 +33,7 @@ from umongo.builder import (
 from .helpers import DataStoreClientWrapper
 from .document import DataStoreDocument
 from .reference import DataStoreReference
-from .fields import ReferenceField
-
-
-SUPPORTED_FIELD_TYPES = [
-    fields.BooleanField,
-    fields.DateTimeField,
-    fields.ReferenceField,
-    fields.StringField,
-    fields.NumberField,
-    fields.IntegerField,
-    fields.UrlField,
-    fields.EmailField,
-    fields.EmbeddedField,
-    fields.ListField,
-    fields.DictField,
-    fields.FormattedStringField,
-    fields.FloatField,
-    ReferenceField
-]
+from .fields import ReferenceField, SUPPORTED_FIELD_TYPES
 
 
 def _build_document_opts(instance, template, name, nmspc, bases):

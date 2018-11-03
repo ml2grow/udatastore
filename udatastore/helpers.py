@@ -127,8 +127,8 @@ class CollectionAbstraction:
     def delete(self, key):
         self.client.delete(self.key(key))
 
-    def query(self, filters, *args, **kwargs):
-        queries = [self.client.query(kind=self.cname)]
+    def query(self, filters, limit=None, order=()):
+        queries = [self.client.query(kind=self.cname, order=order)]
         for attr, domain in filters.items():
             if isinstance(domain, dict):
                 for oper, operand in domain.items():
@@ -139,5 +139,5 @@ class CollectionAbstraction:
                     query.add_filter(attr, '=', domain)
 
         for query in queries:
-            for ret in query.fetch(*args, **kwargs):
+            for ret in query.fetch(limit=limit):
                 yield self._unpack(ret)
