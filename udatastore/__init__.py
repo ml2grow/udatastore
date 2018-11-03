@@ -18,4 +18,3 @@ from .instance import DataStoreInstance, DataStoreBuilder
 from .helpers import DataStoreClientWrapper
 
 umongo.frameworks.register_builder(DataStoreBuilder)
-
