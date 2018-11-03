@@ -68,4 +68,3 @@ SUPPORTED_FIELD_TYPES = [
     umongo.fields.FloatField,
     ReferenceField
 ]
-

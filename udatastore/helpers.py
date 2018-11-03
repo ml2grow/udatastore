@@ -29,18 +29,17 @@ def cook_find_filter(doc_cls, filters):
 
 
 def _apply_filter(query, *args, fresh=False):
-    # pylint: disable=W0212
     if fresh:
         query = datastore.Query(
-            client=query._client,
-            kind=query._kind,
-            project=query._project,
-            namespace=query._namespace,
-            ancestor=query._ancestor,
-            filters=copy.deepcopy(query._filters),
-            projection=query._projection,
-            order=query._order,
-            distinct_on=query._distinct_on
+            client=query._client,  # pylint: disable=W0212
+            kind=query.kind,
+            project=query.project,
+            namespace=query.namespace,
+            ancestor=query.ancestor,
+            filters=copy.deepcopy(query.filters),
+            projection=query.projection,
+            order=query.order,
+            distinct_on=query.distinct_on
         )
     query.add_filter(*args)
     return query
