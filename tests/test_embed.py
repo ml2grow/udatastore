@@ -30,7 +30,7 @@ def test_store_retrieve(instance):
         normalization=NormalizerExt(scale=1, shift=2, editable=True)
     )
     m.commit()
-    found = Model.get(m.pk)
+    found = Model.get(m.pk.id)
     assert found == m
 
     found = list(Model.find({'normalization.scale': 1, 'hypers.variance': 0.2}))

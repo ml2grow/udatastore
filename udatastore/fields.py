@@ -24,10 +24,6 @@ class ReferenceField(umongo.fields.ReferenceField):
     In order to avoid this, we must override the _(de)serialize of the ReferenceField class.
     This involves some copy paste.
     """
-    def _serialize(self, value, attr, obj):
-        if value is None:
-            return None
-        return value.pk
 
     def _deserialize(self, value, attr, data):
         if value is None:
@@ -44,8 +40,8 @@ class ReferenceField(umongo.fields.ReferenceField):
             value = value.pk
         elif isinstance(value, self._document_implementation_cls):
             raise ValidationError("`{document}` reference expected.".format(document=self.document_cls.__name__))
-        collection = self.document_cls.collection
-        value = collection.key(value)
+        #collection = self.document_cls.collection
+        #value = collection.key(value)
         # `value` is similar to data received from the database so we
         # can use `_deserialize_from_mongo` to finish the deserialization
         return self._deserialize_from_mongo(value)

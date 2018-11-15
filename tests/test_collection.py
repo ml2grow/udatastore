@@ -37,7 +37,7 @@ def test_create_key(collection):
 def test_get_put_no_key(collection):
     assert collection.get(5) is None
     pk = collection.put({'a': 5, 'property': 2.0})
-    retrieved = collection.get(pk)
+    retrieved = collection.get(pk.id)
     retrieved == {'a': 5, 'property': 2.0, '_id': pk}
 
 
@@ -82,8 +82,7 @@ def test_put_multi(collection):
     data = [{'a': 5, 'property': 2.0}, {'a': 6, 'property': 3.0}]
     pks = collection.put_multi(data)
     assert len(list(collection.query({}))) == 2
-    print(pks)
-    retrieved = collection.get_multi(pks + [99])
+    retrieved = collection.get_multi([k.id for k in pks] + [99])
     assert len(retrieved) == 3
     assert retrieved[-1] is None
     for d, k, r in zip(data, pks, retrieved):

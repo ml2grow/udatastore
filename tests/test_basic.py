@@ -52,7 +52,7 @@ def test_fetch_reference(instance):
     vegeta = User(email='vegeta@over9000.com', friend=[goku])
     vegeta.commit()
 
-    found = User.get(vegeta.pk)
+    found = User.get(vegeta.pk.id)
     assert found == vegeta
     retrieved = found.friend[0].fetch()
     assert retrieved == goku
