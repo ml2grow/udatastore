@@ -8,6 +8,7 @@ class KeyTranslatingBaseDataProxy(BaseDataProxy):
     Only for retrieving data, wrapping the keys here is difficult (the other key attributes are unknown in
     the DataProxy)
     """
+    # pylint: disable=W0201
     def dump(self):
         data_old = self._data
         self._data = {}
@@ -27,6 +28,7 @@ class KeyTranslatingBaseDataProxy(BaseDataProxy):
 
 
 class KeyTranslatingBaseNonStrictDataProxy(BaseNonStrictDataProxy):
+    # pylint: disable=W0201
     def dump(self):
         data_old = self._data
         self._data = {}
