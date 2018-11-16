@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pickle
+
 import umongo
 from umongo.exceptions import ValidationError
 from umongo.data_objects import Reference
+from marshmallow import fields as ma_fields
 
 
 class ReferenceField(umongo.fields.ReferenceField):
@@ -47,6 +50,22 @@ class ReferenceField(umongo.fields.ReferenceField):
         return self._deserialize_from_mongo(value)
 
 
+class _MaBytesField(ma_fields.Field):
+    def _serialize(self, value, attr, obj):
+        if value is None:
+            return None
+        return pickle.loads(value)
+
+    def _deserialize(self, value, attr, data):
+        if value is None:
+            return None
+        return pickle.dumps(value)
+
+
+class BytesField(umongo.abstract.BaseField, _MaBytesField):
+    pass
+
+
 SUPPORTED_FIELD_TYPES = [
     umongo.fields.BooleanField,
     umongo.fields.DateTimeField,
@@ -61,5 +80,6 @@ SUPPORTED_FIELD_TYPES = [
     umongo.fields.DictField,
     umongo.fields.FormattedStringField,
     umongo.fields.FloatField,
-    ReferenceField
+    ReferenceField,
+    BytesField
 ]

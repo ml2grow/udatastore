@@ -2,8 +2,10 @@ from google.cloud import datastore
 from umongo import Document, fields, validate
 from udatastore.helpers import DataStoreClientWrapper
 from udatastore.builder import DataStoreBuilder
+from udatastore.fields import BytesField
 from datetime import datetime
 import pytest
+import pickle
 
 
 class UserTempl(Document):
@@ -90,3 +92,20 @@ def test_attribute(instance):
     assert found.name == "abcdef"
     assert found.pk == f.pk
     assert found.dump() == {'name': 'abcdef', 'number': '034407777'}
+
+
+class RecipeTempl(Document):
+    mix = BytesField(required=True)
+    order = fields.IntegerField(required=True)
+
+
+def test_bytes_field(instance):
+    Recipe = instance.register(RecipeTempl)
+    t = datetime.now()
+    r = Recipe(mix=t, order=2)
+    r.commit()
+    assert r.dump() == {'id': str(r.pk.id_or_name), 'mix': t, 'order': 2}
+    assert r.to_mongo() == {'_id': r.pk, 'mix': pickle.dumps(t), 'order': 2}
+
+    found = Recipe.get(r.pk.id_or_name)
+    assert found.mix == r.mix
