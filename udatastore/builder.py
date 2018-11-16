@@ -26,10 +26,10 @@ from umongo.builder import (
     _collect_indexes,
     _collect_schema_attrs,
     on_need_add_id_field,
-    data_proxy_factory,
     add_child_field
 )
 
+from .data_proxy import data_proxy_factory
 from .helpers import DataStoreClientWrapper
 from .document import DataStoreDocument
 from .reference import DataStoreReference

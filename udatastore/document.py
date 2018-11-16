@@ -33,7 +33,7 @@ class DataStoreDocument(DocumentImplementation):
         """
         if not self.is_created:
             raise NotCreatedError("Document doesn't exists in database")
-        ret = self.get(self.pk)
+        ret = self.get(self.pk.id_or_name)
         if ret is None:
             raise NotCreatedError("Document doesn't exists in database")
         self._data = self.DataProxy()

@@ -1,3 +1,4 @@
+from google.cloud import datastore
 from umongo import Document, fields, validate
 from udatastore.helpers import DataStoreClientWrapper
 from udatastore.builder import DataStoreBuilder
@@ -8,7 +9,7 @@ import pytest
 class UserTempl(Document):
     email = fields.EmailField(required=True, unique=True)
     birthday = fields.DateTimeField(validate=validate.Range(min=datetime(1900, 1, 1)))
-    friend = fields.ListField(fields.ReferenceField("UserTempl"))
+    friend = fields.ReferenceField("UserTempl")
 
 
 class IncorrectTempl(Document):
@@ -25,6 +26,7 @@ def test_create_commit_find(instance):
     User = instance.register(UserTempl)
     goku = User(email='goku@sayen.com', birthday=datetime(1984, 11, 20))
     goku.commit()
+    assert isinstance(goku.pk, datastore.Key)
 
     found = list(goku.find({}))
     assert len(found) == 1
@@ -49,12 +51,12 @@ def test_fetch_reference(instance):
     User = instance.register(UserTempl)
     goku = User(email='goku@sayen.com', birthday=datetime(1984, 11, 20))
     goku.commit()
-    vegeta = User(email='vegeta@over9000.com', friend=[goku])
+    vegeta = User(email='vegeta@over9000.com', friend=goku)
     vegeta.commit()
 
     found = User.get(vegeta.pk.id)
     assert found == vegeta
-    retrieved = found.friend[0].fetch()
+    retrieved = found.friend.fetch()
     assert retrieved == goku
 
 
@@ -63,3 +65,28 @@ def test_unsupposered_fields(instance):
         instance.register(IncorrectTempl)
 
 
+def test_find_by_reference(instance):
+    User = instance.register(UserTempl)
+    goku = User(email='goku@sayen.com', birthday=datetime(1984, 11, 20))
+    goku.commit()
+    vegeta = User(email='vegeta@over9000.com', friend=goku)
+    vegeta.commit()
+
+    found = User.find_one({'friend': goku.pk})
+    assert found.pk == vegeta.pk
+
+
+class FaxTempl(Document):
+    name = fields.StringField(required=True, attribute='_id')
+    number = fields.StringField(required=True)
+
+
+def test_attribute(instance):
+    Fax = instance.register(FaxTempl)
+    f = Fax(name="abcdef", number="034407777")
+    f.commit()
+    assert f.pk == Fax.collection.key("abcdef")
+    found = Fax.find_one({'_id': f.pk})
+    assert found.name == "abcdef"
+    assert found.pk == f.pk
+    assert found.dump() == {'name': 'abcdef', 'number': '034407777'}
