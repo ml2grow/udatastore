@@ -16,11 +16,11 @@ jobs:
         - DATASTORE_PROJECT_ID: 'ml2grow-intern'
         - DATASTORE_EMULATOR_HOST: '127.0.0.1:8081'
       services:
-        - singularities/datastore-emulator
+        - docker
       install:
         - pip install nox
       before_script:
-        - ./start-datastore --consistency=1.0            
+        - docker run -p 8081:8081 singularities/datastore-emulator --consistency=1.0            
       script: nox -s unit
     - stage: test
       name: "lint"
