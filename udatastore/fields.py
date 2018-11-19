@@ -63,12 +63,12 @@ class _MaBytesField(ma_fields.Field):
 
 class BytesField(umongo.abstract.BaseField, _MaBytesField):
     def _serialize_to_mongo(self, obj):
-        if not obj:
+        if obj is None:
             return missing
         return pickle.dumps(obj)
 
     def _deserialize_from_mongo(self, value):
-        if not value:
+        if value is None:
             return None
         return pickle.loads(value)
 
