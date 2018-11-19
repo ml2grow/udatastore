@@ -1,0 +1,31 @@
+sudo: required
+
+language: python
+python:
+- '3.6'
+
+install:
+- pip install nox
+
+jobs:  
+  include:
+    - stage: "test"                
+      name: "Unit Tests"
+      env:
+        - DATASTORE_LISTEN_ADDRESS: '0.0.0.0:8081'
+        - DATASTORE_PROJECT_ID: 'ml2grow-intern'
+        - DATASTORE_EMULATOR_HOST: '127.0.0.1:8081'
+      services:
+        - singularities/datastore-emulator
+      install:
+        - pip install nox
+      before_script:
+        - ./start-datastore --consistency=1.0            
+      script: nox -s unit
+    - stage: test
+      name: "lint"
+      install:
+        - pip install nox
+      script: nox -s lint
+
+
