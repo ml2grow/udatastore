@@ -103,9 +103,14 @@ def test_bytes_field(instance):
     Recipe = instance.register(RecipeTempl)
     t = datetime.now()
     r = Recipe(mix=t, order=2)
+    assert r.mix == t
     r.commit()
-    assert r.dump() == {'id': str(r.pk.id_or_name), 'mix': t, 'order': 2}
+    assert r.dump() == {'id': str(r.pk.id_or_name), 'mix': pickle.dumps(t), 'order': 2}
     assert r.to_mongo() == {'_id': r.pk, 'mix': pickle.dumps(t), 'order': 2}
+    assert r._data._data['mix'] == t
 
     found = Recipe.get(r.pk.id_or_name)
-    assert found.mix == r.mix
+    assert found.mix == t
+
+    found = Recipe.find_one()
+    assert found.mix == t

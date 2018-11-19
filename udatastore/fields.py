@@ -18,6 +18,7 @@ import umongo
 from umongo.exceptions import ValidationError
 from umongo.data_objects import Reference
 from marshmallow import fields as ma_fields
+from marshmallow import missing
 
 
 class ReferenceField(umongo.fields.ReferenceField):
@@ -43,8 +44,6 @@ class ReferenceField(umongo.fields.ReferenceField):
             value = value.pk
         elif isinstance(value, self._document_implementation_cls):
             raise ValidationError("`{document}` reference expected.".format(document=self.document_cls.__name__))
-        #collection = self.document_cls.collection
-        #value = collection.key(value)
         # `value` is similar to data received from the database so we
         # can use `_deserialize_from_mongo` to finish the deserialization
         return self._deserialize_from_mongo(value)
@@ -54,16 +53,24 @@ class _MaBytesField(ma_fields.Field):
     def _serialize(self, value, attr, obj):
         if value is None:
             return None
-        return pickle.loads(value)
+        return pickle.dumps(value)
 
     def _deserialize(self, value, attr, data):
-        if value is None:
-            return None
-        return pickle.dumps(value)
+        if isinstance(value, bytes):
+            return pickle.loads(value)
+        return value
 
 
 class BytesField(umongo.abstract.BaseField, _MaBytesField):
-    pass
+    def _serialize_to_mongo(self, obj):
+        if not obj:
+            return missing
+        return pickle.dumps(obj)
+
+    def _deserialize_from_mongo(self, value):
+        if not value:
+            return None
+        return pickle.loads(value)
 
 
 SUPPORTED_FIELD_TYPES = [
