@@ -1,31 +1,36 @@
 sudo: required
-
 language: python
 python:
 - '3.6'
-
 install:
 - pip install nox
-
-jobs:  
+jobs:
   include:
-    - stage: "test"                
-      name: "Unit Tests"
-      env:
-        - DATASTORE_LISTEN_ADDRESS: '0.0.0.0:8081'
-        - DATASTORE_PROJECT_ID: 'ml2grow-intern'
-        - DATASTORE_EMULATOR_HOST: '127.0.0.1:8081'
-      services:
-        - docker
-      install:
-        - pip install nox
-      before_script:
-        - docker run -p 8081:8081 -e DATASTORE_LISTEN_ADDRESS=0.0.0.0:8081 -e DATASTORE_PROJECT_ID=ml2grow-intern singularities/datastore-emulator --consistency=1.0 &           
-      script: nox -s unit
-    - stage: test
-      name: "lint"
-      install:
-        - pip install nox
-      script: nox -s lint
-
-
+  - stage: test
+    name: Unit Tests
+    env:
+    - DATASTORE_LISTEN_ADDRESS: 0.0.0.0:8081
+    - DATASTORE_PROJECT_ID: ml2grow-intern
+    - DATASTORE_EMULATOR_HOST: 127.0.0.1:8081
+    services:
+    - docker
+    install:
+    - pip install nox
+    before_script:
+    - docker run -p 8081:8081 -e DATASTORE_LISTEN_ADDRESS=0.0.0.0:8081 -e DATASTORE_PROJECT_ID=ml2grow-intern
+      singularities/datastore-emulator --consistency=1.0 &
+    script: nox -s unit
+  - stage: test
+    name: lint
+    install:
+    - pip install nox
+    script: nox -s lint
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: ML2Grow
+  password:
+    secure: IS/y43a8jCVY8RdeQ9FIIdfFotoV5a8me6wxCXgE9ZyRLGejK2CdtL2aLNHERBZwMiqm6L8dCTaYCm4t9vTRA0rjz0l7TLYP7icDDVUWrPGUnsViSdRIdnkGwpfLDMswSQXXwL0bQHqfA5dSwyvA+ZiqT6rz5qJMO/tyZqoSZYp6dRM1jW1TQoP+L4d/6sKsgS1NKgl8WEyCrQZUTPnXcWLM6UMTfwGY5GhKzR2R/PcL4PD1LZsY57j5RfM9jQSki51axVib8N2b2UacS5viryVgYeRE7JC5KQDdEaaldIERQsbsm2metX8+fnFhmnNhaNfw/ehX3diG0MGqCnP4rBsVlHKHiG8/RYsnAF7xSbK113odFYTWjsWI4ZdgvjxnW5INupjdHf5fS9LIZVo2gzpwnMNuNxCe8jX8iD+sy5AnXW48smfkXzeZ2WTnH4IothULd+NV/+lzJkt1nOfgWAiQtwrsAFTkV/7dloJlM+mhiZKxg/FNpqTL2vzY7cIHYvS+0UeddzCvBXUZ01uVSJtTwrDukZQlQXXNQhIRzsv5xC7SL9yeG9fk9IK3uKyum7rGx/e2+DhRqjFmu1kYgzwbv0nGrOMjnuO83XidZgECuPikP8m4wtSSuPTKUlFyWTTGgeA9QHSS3+XZhM9FfabibGzm7LCBlr2hiKZemYs=
+  on:
+    tags: true
+    repo: ml2grow/udatastore

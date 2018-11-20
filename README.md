@@ -12,6 +12,10 @@ following conventions:
 * A datastore entity kind corresponds to a mongo collection
 * The datastore `__key__` field corresponds to the mongo `_id` field
 
+## Install
+
+    pip install udatastore
+
 ## Example
 ```python
 from datetime import datetime
