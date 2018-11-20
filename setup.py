@@ -54,7 +54,7 @@ setup(
     test_suite='tests',
     keywords='udatastore umongo pymongo datastore',
     classifiers=[
-        'Development Status :: 3 - Alpha'
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
