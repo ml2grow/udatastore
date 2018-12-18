@@ -1,8 +1,10 @@
 from google.cloud import datastore
 from umongo import Document, fields, validate
+from umongo.fields import StringField
+
 from udatastore.helpers import DataStoreClientWrapper
 from udatastore.builder import DataStoreBuilder
-from udatastore.fields import BytesField
+from udatastore.fields import BytesField, DictField
 from datetime import datetime
 import pytest
 import pickle
@@ -114,3 +116,18 @@ def test_bytes_field(instance):
 
     found = Recipe.find_one()
     assert found.mix == t
+
+class PokemonTempl(Document):
+    name = StringField(required=True)
+    attributes = DictField(required=True)
+
+
+def test_dict_field(instance):
+    Pokemon = instance.register(PokemonTempl)
+    attr_dict = {"type": "grass", "H.P.": "104"}
+    venusaur = Pokemon(name="Venusaur", attributes=attr_dict)
+    venusaur.commit()
+
+    found = Pokemon.find_one({'_id': venusaur.pk})
+
+    assert attr_dict == found.attributes

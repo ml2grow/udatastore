@@ -1,3 +1,4 @@
+from udatastore.fields import DictField
 from umongo import Document, fields, EmbeddedDocument
 
 
@@ -14,7 +15,7 @@ class NormalizerExtTempl(NormalizerTempl):
 
 
 class ModelTempl(Document):
-    hypers = fields.DictField(required=True)
+    hypers = DictField(required=True)
     normalization = fields.EmbeddedField(NormalizerTempl)
 
 
