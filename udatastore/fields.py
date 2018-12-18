@@ -16,7 +16,7 @@ import pickle
 
 import umongo
 from umongo.exceptions import ValidationError
-from umongo.data_objects import Reference
+from umongo.data_objects import Reference, Dict
 from marshmallow import fields as ma_fields
 from marshmallow import missing
 
@@ -73,6 +73,48 @@ class BytesField(umongo.abstract.BaseField, _MaBytesField):
         return pickle.loads(value)
 
 
+class DictField(umongo.fields.DictField):
+    def _deserialize(self, value, attr, data):
+        value = super()._deserialize(value, attr, data)
+        if isinstance(value, dict):
+            altered_val = {self._replace_dot(k): v for k, v in value.items()}
+            return Dict(altered_val)
+        else:
+            return Dict(value)
+
+    def _serialize_to_mongo(self, obj):
+        if not obj:
+            return missing
+        if isinstance(obj, dict):
+            altered_obj = {self._replace_dot(k): v for k, v in obj.items()}
+            return dict(altered_obj)
+
+        return dict(obj)
+
+    @staticmethod
+    def _replace_dot(obj):
+        if isinstance(obj, str):
+            return obj.replace(".", "[dot]")
+        else:
+            return obj
+
+    @staticmethod
+    def _reverse_replace_dot(obj):
+        if isinstance(obj, str):
+            return obj.replace("[dot]", ".")
+        else:
+            return obj
+
+    def _deserialize_from_mongo(self, value):
+        if value:
+            val_dict = Dict(value)
+            altered_val = {self._reverse_replace_dot(k): v for k, v in val_dict.items()}
+            return altered_val
+        else:
+            return Dict()
+
+
+
 SUPPORTED_FIELD_TYPES = [
     umongo.fields.BooleanField,
     umongo.fields.DateTimeField,
@@ -84,7 +126,7 @@ SUPPORTED_FIELD_TYPES = [
     umongo.fields.EmailField,
     umongo.fields.EmbeddedField,
     umongo.fields.ListField,
-    umongo.fields.DictField,
+    DictField,
     umongo.fields.FormattedStringField,
     umongo.fields.FloatField,
     ReferenceField,
