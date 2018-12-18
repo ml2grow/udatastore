@@ -77,7 +77,7 @@ class DictField(umongo.fields.DictField):
     def _deserialize(self, value, attr, data):
         value = super()._deserialize(value, attr, data)
         if isinstance(value, dict):
-            altered_val = {self._replace_dot(k): v for k, v in value.items()}
+            altered_val = {self._reverse_replace_dot(k): v for k, v in value.items()}
             return Dict(altered_val)
         else:
             return Dict(value)
