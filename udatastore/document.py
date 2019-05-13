@@ -83,11 +83,17 @@ class DataStoreDocument(DocumentImplementation):
         """
         Remove the document from database.
         """
-        if not self.is_created:
-            raise NotCreatedError("Document doesn't exists in database")
+        self.delete_multi([self])
+
+    @classmethod
+    def delete_multi(cls, entities):
+        for entity in entities:
+            if not entity.is_created:
+                raise NotCreatedError("Document doesn't exists in database")
         try:
-            self.collection.delete(self.pk)  # pylint: disable=E1101
-            self.is_created = False
+            cls.collection.delete_multi([e.pk for e in entities])  # pylint: disable=E1101
+            for entity in entities:
+                entity.is_created = False
         except Exception as exc:
             raise DeleteError(str(exc))
 

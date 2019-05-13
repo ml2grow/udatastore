@@ -65,6 +65,16 @@ def test_fetch_reference(instance):
     assert retrieved == goku
 
 
+def test_delete_multi(instance):
+    User = instance.register(UserTempl)
+    goku = User(email='goku@sayen.com', birthday=datetime(1984, 11, 20))
+    goku.commit()
+    vegeta = User(email='vegeta@over9000.com', friend=goku)
+    vegeta.commit()
+    User.delete_multi([goku, vegeta])
+    assert User.count() == 0
+
+
 def test_unsupposered_fields(instance):
     with pytest.raises(Exception):
         instance.register(IncorrectTempl)

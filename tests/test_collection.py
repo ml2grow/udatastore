@@ -78,16 +78,20 @@ def test_query(collection, filter, expected):
     assert len(retrieved) == expected
 
 
-def test_put_multi(collection):
+def test_put_delete_multi(collection):
     data = [{'a': 5, 'property': 2.0}, {'a': 6, 'property': 3.0}]
     pks = collection.put_multi(data)
+    ids = [k.id for k in pks]
     assert len(list(collection.query({}))) == 2
-    retrieved = collection.get_multi([k.id for k in pks] + [99])
+    retrieved = collection.get_multi(ids + [99])
     assert len(retrieved) == 3
     assert retrieved[-1] is None
     for d, k, r in zip(data, pks, retrieved):
         d['_id'] = k
         assert d == r
+    collection.delete_multi(pks)
+    assert collection.get(ids[0]) is None
+    assert collection.get(ids[1]) is None
 
 
 def test_put_multi_overload(collection):
