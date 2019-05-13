@@ -62,10 +62,10 @@ class DataStoreDocument(DocumentImplementation):
                     doc.io_validate(validate_all=io_validate_all)
                     payloads.append(doc._data.to_mongo(update=False))
 
-            keys = cls.collection.put_multi(
+            keys = cls.collection.put_multi(  # pylint: disable=E1101
                 payloads,
                 exclude_from_indexes=cls.excluded_properties()
-            )  # pylint: disable=E1101
+            )
 
             for key, doc in zip(keys, docs):
                 if not doc.is_created:
