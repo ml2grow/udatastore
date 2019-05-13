@@ -92,11 +92,11 @@ class CollectionAbstraction:
             payload[key] = value
         return payload
 
-    def _pack(self, payload):
+    def _pack(self, payload, exclude_from_indexes=()):
         ref = payload.pop('_id', None)
         if not isinstance(ref, datastore.Key):
             ref = self.key(ref)
-        entity = datastore.Entity(key=ref)
+        entity = datastore.Entity(key=ref, exclude_from_indexes=exclude_from_indexes)
         entity.update(payload)
         return entity
 
@@ -115,12 +115,12 @@ class CollectionAbstraction:
         entity_map = {e.key.id_or_name: e for e in entities}
         return [self._unpack(entity_map.get(key, None)) for key in keys]
 
-    def put(self, payload):
-        keys = self.put_multi([payload])
+    def put(self, payload, *args, **kwargs):
+        keys = self.put_multi([payload], *args, **kwargs)
         return keys[0]
 
-    def put_multi(self, payloads):
-        entities = list(map(self._pack, payloads))
+    def put_multi(self, payloads, exclude_from_indexes=()):
+        entities = list(map(lambda p: self._pack(p, exclude_from_indexes), payloads))
         self.client.put_multi(entities)
         return list(map(lambda k: k.key, entities))
 
