@@ -88,3 +88,11 @@ def test_put_multi(collection):
     for d, k, r in zip(data, pks, retrieved):
         d['_id'] = k
         assert d == r
+
+
+def test_put_multi_overload(collection):
+    data = [{'a': i, 'property': j} for i, j in zip(range(2,1102), range(3, 1103))]
+    pks = collection.put_multi(data)
+    assert len(list(collection.query({}))) == 1100
+    retrieved = collection.get_multi([k.id for k in pks])
+    assert len(retrieved) == 1100

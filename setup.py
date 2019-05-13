@@ -1,4 +1,4 @@
-# Copyright 2018 ML2Grow BVBA
+# Copyright 2019 ML2Grow NV
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ def read_version(fname):
 
 
 REQUIREMENTS = [
-    'umongo',
-    'pymongo',
-    'google-cloud-datastore>=1.7.0'
+    'umongo>=1.2.0,<1.3',
+    'pymongo>=3.7.2,<3.8',
+    'google-cloud-datastore>=1.7.0,<1.8'
 ]
 
 with open('README.md') as f:

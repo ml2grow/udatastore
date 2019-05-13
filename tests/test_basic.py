@@ -8,6 +8,7 @@ from udatastore.fields import BytesField, DictField
 from datetime import datetime
 import pytest
 import pickle
+import numpy as np
 
 
 class UserTempl(Document):
@@ -116,6 +117,24 @@ def test_bytes_field(instance):
 
     found = Recipe.find_one()
     assert found.mix == t
+
+
+class RecipeTemplEnc(Document):
+    mix = BytesField(required=True, encoding='latin1')
+    order = fields.IntegerField(required=True)
+
+
+def test_bytes_field_numpy(instance, client):
+    Recipe = instance.register(RecipeTemplEnc)
+    t = np.random.rand(4,3)
+    r = Recipe(mix=t, order=2)
+    r.commit()
+    data = client.get(r.pk)
+    data['mix'] = pickle.dumps(t, protocol=2, fix_imports=True)
+    client.put(data)
+    found = Recipe.find_one()
+    assert np.allclose(found.mix, t)
+
 
 class PokemonTempl(Document):
     name = StringField(required=True)

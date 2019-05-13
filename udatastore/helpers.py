@@ -1,4 +1,4 @@
-# Copyright 2018 ML2Grow BVBA
+# Copyright 2019 ML2Grow NV
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 import copy
 import itertools
 from datetime import datetime
+from functools import partial
 
 from google.cloud import datastore
 from umongo.frameworks import tools
@@ -109,9 +110,10 @@ class CollectionAbstraction:
     def get(self, key):
         return self.get_multi([key])[0]
 
-    def get_multi(self, keys):
+    def get_multi(self, keys, size=1000):
         keys_wrapped = list(map(self.key, keys))
-        entities = self.client.get_multi(keys_wrapped)
+        chunks = [keys_wrapped[x:x + size] for x in range(0, len(keys_wrapped), size)]
+        entities = [entity for chunk in chunks for entity in self.client.get_multi(chunk)]
         entity_map = {e.key.id_or_name: e for e in entities}
         return [self._unpack(entity_map.get(key, None)) for key in keys]
 
@@ -119,10 +121,13 @@ class CollectionAbstraction:
         keys = self.put_multi([payload], *args, **kwargs)
         return keys[0]
 
-    def put_multi(self, payloads, exclude_from_indexes=()):
-        entities = list(map(lambda p: self._pack(p, exclude_from_indexes), payloads))
-        self.client.put_multi(entities)
-        return list(map(lambda k: k.key, entities))
+    def put_multi(self, payloads, size=500, exclude_from_indexes=()):
+        packer = partial(self._pack, exclude_from_indexes=exclude_from_indexes)
+        entities = list(map(packer, payloads))
+        chunks = [entities[x:x + size] for x in range(0, len(entities), size)]
+        for chunk in chunks:
+            self.client.put_multi(chunk)
+        return [entity.key for chunk in chunks for entity in chunk]
 
     def delete(self, key):
         self.client.delete(key)

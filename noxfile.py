@@ -1,4 +1,4 @@
-# Copyright 2018 ML2Grow BVBA
+# Copyright 2019 ML2Grow NV
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import nox
 
 @nox.session(python="3.6")
 def unit(session):
-    session.install('pytest', 'mock', 'pytest-spec')
+    session.install('pytest', 'mock', 'pytest-spec', 'numpy')
     session.install('-e', '.')
 
     # Run py.test against the unit tests.

@@ -1,4 +1,4 @@
-# Copyright 2018 ML2Grow BVBA
+# Copyright 2019 ML2Grow NV
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,6 +62,10 @@ class _MaBytesField(ma_fields.Field):
 
 
 class BytesField(umongo.abstract.BaseField, _MaBytesField):
+    def __init__(self, *args, encoding='ASCII', **kwargs):
+        super(BytesField, self).__init__(*args, **kwargs)
+        self._encoding = encoding
+
     def _serialize_to_mongo(self, obj):
         if obj is None:
             return missing
@@ -70,7 +74,7 @@ class BytesField(umongo.abstract.BaseField, _MaBytesField):
     def _deserialize_from_mongo(self, value):
         if value is None:
             return None
-        return pickle.loads(value)
+        return pickle.loads(value, encoding=self._encoding)
 
 
 class DictField(umongo.fields.DictField):

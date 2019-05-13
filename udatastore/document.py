@@ -1,4 +1,4 @@
-# Copyright 2018 ML2Grow BVBA
+# Copyright 2019 ML2Grow NV
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,10 @@ class DataStoreDocument(DocumentImplementation):
                     doc.io_validate(validate_all=io_validate_all)
                     payloads.append(doc._data.to_mongo(update=False))
 
-            keys = cls.collection.put_multi(payloads, cls.excluded_properties())  # pylint: disable=E1101
+            keys = cls.collection.put_multi(
+                payloads,
+                exclude_from_indexes=cls.excluded_properties()
+            )  # pylint: disable=E1101
 
             for key, doc in zip(keys, docs):
                 if not doc.is_created:
