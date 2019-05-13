@@ -130,7 +130,12 @@ class CollectionAbstraction:
         return [entity.key for chunk in chunks for entity in chunk]
 
     def delete(self, key):
-        self.client.delete(key)
+        self.delete_multi([key])
+
+    def delete_multi(self, keys, size=500):
+        chunks = [keys[x:x + size] for x in range(0, len(keys), size)]
+        for chunk in chunks:
+            self.client.delete_multi(chunk)
 
     def query(self, filters, limit=None, order=()):
         queries = [self.client.query(kind=self.cname, order=order)]
