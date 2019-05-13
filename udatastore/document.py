@@ -27,6 +27,10 @@ class DataStoreDocument(DocumentImplementation):
 
     opts = DocumentImplementation.opts
 
+    @staticmethod
+    def excluded_properties():
+        return ()
+
     def reload(self):
         """
         Retrieve and replace document's data by the ones in database.
@@ -58,7 +62,10 @@ class DataStoreDocument(DocumentImplementation):
                     doc.io_validate(validate_all=io_validate_all)
                     payloads.append(doc._data.to_mongo(update=False))
 
-            keys = cls.collection.put_multi(payloads)  # pylint: disable=E1101
+            keys = cls.collection.put_multi(  # pylint: disable=E1101
+                payloads,
+                exclude_from_indexes=cls.excluded_properties()
+            )
 
             for key, doc in zip(keys, docs):
                 if not doc.is_created:
